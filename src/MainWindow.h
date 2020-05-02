@@ -1,4 +1,4 @@
-/*                            M A I N . C P P
+/*                         M A I N W I N D O W . H
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted.
@@ -11,27 +11,31 @@
  * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/** @file main.cpp
+/** @file MainWindow.h
  *
  *  BRL-CAD GUI:
- *      the main function
+ *      the main window class declaration
  */
 
-#include <QApplication>
+#ifndef MAINWINDOW_INCLUDED
+#define MAINWINDOW_INCLUDED
 
-#include "MainWindow.h"
+#include <QMainWindow>
+
+#include <brlcad/Database/MemoryDatabase.h>
 
 
-int main(int argc, char *argv[])
-{
-    QApplication application(argc, argv);
-    char*        file = 0;
+class MainWindow : public QMainWindow {
+    Q_OBJECT
+public:
+    MainWindow(const char* fileName,
+               QWidget*    parent = 0);
 
-    if (argc > 1)
-        file = argv[1];
+private:
+    BRLCAD::MemoryDatabase m_database;
 
-    MainWindow mainWindow(file);
-    mainWindow.show();
+    void LoadDatabase(const char* fileName);
+};
 
-    return application.exec();
-}
+
+#endif // MAINWINDOW_INCLUDED

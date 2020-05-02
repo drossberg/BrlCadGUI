@@ -13,6 +13,9 @@
 #
 #########################################################################
 
+set(CMAKE_AUTOMOC ON)
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
+
 INCLUDE_DIRECTORIES(
         ${BrlCadGUI_SOURCE_DIR}/include
         ${BrlCadGUI_BINARY_DIR}/include
@@ -21,6 +24,7 @@ INCLUDE_DIRECTORIES(
 
 SET(GuiSources
     main.cpp
+    MainWindow.cpp
 )
 
 IF(MSVC)
@@ -30,4 +34,4 @@ ELSE(MSVC)
 ENDIF(MSVC)
 
 ADD_EXECUTABLE(GUI ${GuiSources})
-TARGET_LINK_LIBRARIES(GUI ${BRLCAD_MOOSE_LIBRARY})
+TARGET_LINK_LIBRARIES(GUI ${BRLCAD_MOOSE_LIBRARY} Qt5::Widgets)

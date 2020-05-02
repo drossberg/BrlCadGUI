@@ -1,4 +1,4 @@
-/*                            M A I N . C P P
+/*                       M A I N W I N D O W . C P P
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted.
@@ -11,27 +11,39 @@
  * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/** @file main.cpp
+/** @file MainWindow.cpp
  *
  *  BRL-CAD GUI:
- *      the main function
+ *      the main window class implementation
  */
-
-#include <QApplication>
 
 #include "MainWindow.h"
 
 
-int main(int argc, char *argv[])
-{
-    QApplication application(argc, argv);
-    char*        file = 0;
+MainWindow::MainWindow
+(
+    const char* fileName,
+    QWidget*    parent
+) : QMainWindow(parent),
+    m_database() {
+    setWindowTitle(tr("BRL-CAD GUI"));
 
-    if (argc > 1)
-        file = argv[1];
+    if (fileName != 0)
+        LoadDatabase(fileName);
+}
 
-    MainWindow mainWindow(file);
-    mainWindow.show();
 
-    return application.exec();
+void MainWindow::LoadDatabase
+(
+    const char* fileName
+) {
+    if (m_database.Load(fileName))  {
+        QString title = m_database.Title();
+
+        title += " [";
+        title += fileName;
+        title += "]";
+
+        setWindowTitle(title);
+    }
 }
