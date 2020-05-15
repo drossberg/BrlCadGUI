@@ -17,6 +17,12 @@
  *      the main window class implementation
  */
 
+#include <QAction>
+#include <QApplication>
+#include <QFileDialog>
+#include <QMenu>
+#include <QMenuBar>
+
 #include "MainWindow.h"
 
 
@@ -27,6 +33,23 @@ MainWindow::MainWindow
 ) : QMainWindow(parent),
     m_database() {
     setWindowTitle(tr("BRL-CAD GUI"));
+
+    QAction* dbOpenAction = new QAction(tr("Open database"));
+    dbOpenAction->setShortcuts(QKeySequence::Open);
+    dbOpenAction->setToolTip(tr("Open an existing .g database file"));
+    connect(dbOpenAction, &QAction::triggered,
+            this,         &MainWindow::OpenDatabase);
+
+    QAction* exitAction = new QAction(tr("Exit"));
+    exitAction->setShortcuts(QKeySequence::Quit);
+    exitAction->setToolTip(tr("Terminates the program"));
+    connect(exitAction, &QAction::triggered,
+            qApp,       &QApplication::closeAllWindows);
+
+    QMenu* fileMenu = menuBar()->addMenu(tr("File"));
+    fileMenu->addAction(dbOpenAction);
+    fileMenu->addSeparator();
+    fileMenu->addAction(exitAction);
 
     if (fileName != 0)
         LoadDatabase(fileName);
@@ -46,4 +69,14 @@ void MainWindow::LoadDatabase
 
         setWindowTitle(title);
     }
+}
+
+
+void MainWindow::OpenDatabase(void) {
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                                    tr("Open BRL-CAD .g database file"),
+                                                    QString(),
+                                                    "BRL-CAD database file (*.g)");
+
+    LoadDatabase(fileName.toUtf8().data());
 }

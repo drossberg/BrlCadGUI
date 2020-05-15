@@ -35,6 +35,9 @@ private:
     BRLCAD::MemoryDatabase m_database;
 
     void LoadDatabase(const char* fileName);
+
+private slots:
+    void OpenDatabase(void);
 };
 
 
