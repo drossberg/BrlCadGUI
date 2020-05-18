@@ -21,6 +21,7 @@
 #define MAINWINDOW_INCLUDED
 
 #include <QMainWindow>
+#include <QTreeWidget>
 
 #include <brlcad/Database/MemoryDatabase.h>
 
@@ -33,8 +34,11 @@ public:
 
 private:
     BRLCAD::MemoryDatabase m_database;
+    QWidget*               m_display;
+    QTreeWidget*           m_objectsTree;
 
     void LoadDatabase(const char* fileName);
+    void FillObjectsTree(void);
 
 private slots:
     void OpenDatabase(void);

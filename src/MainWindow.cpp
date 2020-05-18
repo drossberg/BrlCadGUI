@@ -19,13 +19,103 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QDockWidget>
 #include <QFileDialog>
+#include <QHeaderView>
 #include <QMenu>
 #include <QMenuBar>
+
+#include <brlcad/Database/Combination.h>
 
 #include "MainWindow.h"
 
 
+// static helpers
+class SubObjectCallback;
+
+static void WalkTree(const BRLCAD::Combination::ConstTreeNode& tree,
+                     const BRLCAD::ConstDatabase&              database,
+                     SubObjectCallback&                        callback);
+
+
+class SubObjectCallback : public BRLCAD::ConstDatabase::ObjectCallback {
+public:
+    SubObjectCallback(QTreeWidgetItem*       treeItem,
+                      BRLCAD::ConstDatabase& database) : BRLCAD::ConstDatabase::ObjectCallback(),
+                                                         m_treeItem(treeItem),
+                                                         m_database(database) {}
+
+    virtual void operator()(const BRLCAD::Object& object) {
+        QTreeWidgetItem* treeItem = new QTreeWidgetItem(m_treeItem);
+        treeItem->setText(0, QString::fromUtf8(object.Name()));
+
+        const BRLCAD::Combination* combination = dynamic_cast<const BRLCAD::Combination*>(&object);
+
+        if (combination != 0) {
+            SubObjectCallback subObjectCallback(treeItem, m_database);
+
+            WalkTree(combination->Tree(), m_database, subObjectCallback);
+        }
+    }
+
+private:
+    QTreeWidgetItem*       m_treeItem;
+    BRLCAD::ConstDatabase& m_database;
+};
+
+
+class TopObjectCallback : public BRLCAD::ConstDatabase::ObjectCallback {
+public:
+    TopObjectCallback(QTreeWidget*           tree,
+                      BRLCAD::ConstDatabase& database) : BRLCAD::ConstDatabase::ObjectCallback(),
+                                                         m_tree(tree),
+                                                         m_database(database) {}
+
+    virtual void operator()(const BRLCAD::Object& object) {
+        QTreeWidgetItem* treeItem = new QTreeWidgetItem(m_tree);
+        treeItem->setText(0, QString::fromUtf8(object.Name()));
+
+        const BRLCAD::Combination* combination = dynamic_cast<const BRLCAD::Combination*>(&object);
+
+        if (combination != 0) {
+            SubObjectCallback subObjectCallback(treeItem, m_database);
+
+            WalkTree(combination->Tree(), m_database, subObjectCallback);
+        }
+    }
+
+private:
+    QTreeWidget*           m_tree;
+    BRLCAD::ConstDatabase& m_database;
+};
+
+
+static void WalkTree
+(
+    const BRLCAD::Combination::ConstTreeNode& tree,
+    const BRLCAD::ConstDatabase&              database,
+    SubObjectCallback&                        callback
+) {
+    switch (tree.Operation()) {
+        case BRLCAD::Combination::ConstTreeNode::Union:
+        case BRLCAD::Combination::ConstTreeNode::Intersection:
+        case BRLCAD::Combination::ConstTreeNode::Subtraction:
+        case BRLCAD::Combination::ConstTreeNode::ExclusiveOr:
+            WalkTree(tree.LeftOperand(), database, callback);
+            WalkTree(tree.RightOperand(), database, callback);
+            break;
+
+        case BRLCAD::Combination::ConstTreeNode::Not:
+            WalkTree(tree.Operand(), database, callback);
+            break;
+
+        case BRLCAD::Combination::ConstTreeNode::Leaf:
+            database.Get(tree.Name(), callback);
+    }
+}
+
+
+// MainWindow
 MainWindow::MainWindow
 (
     const char* fileName,
@@ -51,6 +141,19 @@ MainWindow::MainWindow
     fileMenu->addSeparator();
     fileMenu->addAction(exitAction);
 
+    // the display
+    m_display = new QWidget();
+    setCentralWidget(m_display);
+
+    // objects' tree
+    QDockWidget* objectsDock = new QDockWidget(tr("Database object tree"));
+    m_objectsTree = new QTreeWidget();
+    m_objectsTree->setRootIsDecorated(true);
+    m_objectsTree->setColumnCount(1);
+    m_objectsTree->header()->hide();
+    objectsDock->setWidget(m_objectsTree);
+    addDockWidget(Qt::LeftDockWidgetArea, objectsDock);
+
     if (fileName != 0)
         LoadDatabase(fileName);
 }
@@ -68,6 +171,21 @@ void MainWindow::LoadDatabase
         title += "]";
 
         setWindowTitle(title);
+        FillObjectsTree();
+    }
+}
+
+
+void MainWindow::FillObjectsTree(void) {
+    m_objectsTree->clear();
+
+    BRLCAD::ConstDatabase::TopObjectIterator topObjectIterator = m_database.FirstTopObject();
+
+    while (topObjectIterator.Good()) {
+        TopObjectCallback topObjectCallback(m_objectsTree, m_database);
+
+        m_database.Get(topObjectIterator.Name(), topObjectCallback);
+        ++topObjectIterator;
     }
 }
 
