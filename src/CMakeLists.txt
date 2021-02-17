@@ -15,6 +15,7 @@
 
 set(CMAKE_AUTOMOC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(OpenGL REQUIRED)
 
 INCLUDE_DIRECTORIES(
         ${BrlCadGUI_SOURCE_DIR}/include
@@ -24,7 +25,10 @@ INCLUDE_DIRECTORIES(
 
 SET(GuiSources
     main.cpp
+    DisplayManager.cpp
+    GeometryModel.cpp
     MainWindow.cpp
+    PlotGeometry.cpp
 )
 
 IF(MSVC)
@@ -34,4 +38,4 @@ ELSE(MSVC)
 ENDIF(MSVC)
 
 ADD_EXECUTABLE(GUI ${GuiSources})
-TARGET_LINK_LIBRARIES(GUI ${BRLCAD_MOOSE_LIBRARY} Qt5::Widgets)
+TARGET_LINK_LIBRARIES(GUI ${BRLCAD_MOOSE_LIBRARY} Qt5::Widgets OpenGL::GL)

@@ -27,6 +27,7 @@
 
 #include <brlcad/Database/Combination.h>
 
+#include "PlotGeometry.h"
 #include "MainWindow.h"
 
 
@@ -38,14 +39,13 @@ static void WalkTree(const BRLCAD::Combination::ConstTreeNode& tree,
                      SubObjectCallback&                        callback);
 
 
-class SubObjectCallback : public BRLCAD::ConstDatabase::ObjectCallback {
+class SubObjectCallback {
 public:
     SubObjectCallback(QTreeWidgetItem*       treeItem,
-                      BRLCAD::ConstDatabase& database) : BRLCAD::ConstDatabase::ObjectCallback(),
-                                                         m_treeItem(treeItem),
+                      BRLCAD::ConstDatabase& database) : m_treeItem(treeItem),
                                                          m_database(database) {}
 
-    virtual void operator()(const BRLCAD::Object& object) {
+    void operator()(const BRLCAD::Object& object) {
         QTreeWidgetItem* treeItem = new QTreeWidgetItem(m_treeItem);
         treeItem->setText(0, QString::fromUtf8(object.Name()));
 
@@ -64,14 +64,13 @@ private:
 };
 
 
-class TopObjectCallback : public BRLCAD::ConstDatabase::ObjectCallback {
+class TopObjectCallback {
 public:
     TopObjectCallback(QTreeWidget*           tree,
-                      BRLCAD::ConstDatabase& database) : BRLCAD::ConstDatabase::ObjectCallback(),
-                                                         m_tree(tree),
+                      BRLCAD::ConstDatabase& database) : m_tree(tree),
                                                          m_database(database) {}
 
-    virtual void operator()(const BRLCAD::Object& object) {
+    void operator()(const BRLCAD::Object& object) {
         QTreeWidgetItem* treeItem = new QTreeWidgetItem(m_tree);
         treeItem->setText(0, QString::fromUtf8(object.Name()));
 
@@ -142,7 +141,8 @@ MainWindow::MainWindow
     fileMenu->addAction(exitAction);
 
     // the display
-    m_display = new QWidget();
+    m_display = new DisplayManager(this);
+    m_display->SetModel(&m_model);
     setCentralWidget(m_display);
 
     // objects' tree
@@ -151,6 +151,9 @@ MainWindow::MainWindow
     m_objectsTree->setRootIsDecorated(true);
     m_objectsTree->setColumnCount(1);
     m_objectsTree->header()->hide();
+    connect(m_objectsTree, &QTreeWidget::itemSelectionChanged,
+            this,          &MainWindow::SelectObjects);
+
     objectsDock->setWidget(m_objectsTree);
     addDockWidget(Qt::LeftDockWidgetArea, objectsDock);
 
@@ -197,4 +200,24 @@ void MainWindow::OpenDatabase(void) {
                                                     "BRL-CAD database file (*.g)");
 
     LoadDatabase(fileName.toUtf8().data());
+}
+
+
+void MainWindow::SelectObjects(void) {
+    QList<QTreeWidgetItem*> selectedItems = m_objectsTree->selectedItems();
+
+    m_database.UnSelectAll();
+    m_model.Clear();
+
+    for (QList<QTreeWidgetItem*>::const_iterator it = selectedItems.begin(); it != selectedItems.end(); ++it) {
+        QByteArray objectName = (*it)->text(0).toUtf8();
+        PlotGeometry* plot = new PlotGeometry();
+
+        m_database.Select(objectName);
+        m_database.Plot(objectName, plot->VectorList());
+        m_model.Append(plot);
+    }
+
+    m_display->FitToWindow();
+    m_display->Redraw();
 }

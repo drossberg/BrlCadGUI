@@ -25,6 +25,8 @@
 
 #include <brlcad/Database/MemoryDatabase.h>
 
+#include "DisplayManager.h"
+
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -34,7 +36,8 @@ public:
 
 private:
     BRLCAD::MemoryDatabase m_database;
-    QWidget*               m_display;
+    GeometryModel          m_model;
+    DisplayManager*        m_display;
     QTreeWidget*           m_objectsTree;
 
     void LoadDatabase(const char* fileName);
@@ -42,6 +45,7 @@ private:
 
 private slots:
     void OpenDatabase(void);
+    void SelectObjects(void);
 };
 
 
