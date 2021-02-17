@@ -59,7 +59,7 @@ static QMatrix4x4 Projection
         if (length > SmallFloat)
             ret.lookAt(eyePoint, targetPoint, QVector3D(0.f, 0.f, 1.f));
         else
-            ret.lookAt(eyePoint, targetPoint, QVector3D(1.f, 0.f, 0.f));
+            ret.lookAt(eyePoint, targetPoint, QVector3D(0.f, 1.f, 0.f));
     }
 
     return ret;
@@ -140,13 +140,13 @@ void DisplayManager::SetToXYPlane(void) {
 }
 
 
-void DisplayManager::SetToYZPlane(void) {
-    m_paintAction = PaintAction::YzFit;
+void DisplayManager::SetToXZPlane(void) {
+    m_paintAction = PaintAction::XzFit;
 }
 
 
-void DisplayManager::SetToXZPlane(void) {
-    m_paintAction = PaintAction::XzFit;
+void DisplayManager::SetToYZPlane(void) {
+    m_paintAction = PaintAction::YzFit;
 }
 
 
@@ -403,7 +403,7 @@ void DisplayManager::paintGL(void) {
 
             QVector3D modelCenter = (minCorner + maxCorner) / 2.f;
             QVector3D modelSize   = maxCorner - minCorner;
-            QVector3D eyePoint(modelCenter.x(), modelCenter.y(), maxCorner.z());
+            QVector3D eyePoint(modelCenter.x(), minCorner.y(), modelCenter.z());
             QVector3D targetPoint = modelCenter;
 
             if (modelSize.y() == 0.f)
@@ -470,7 +470,7 @@ void DisplayManager::paintGL(void) {
 
             QVector3D modelCenter = (minCorner + maxCorner) / 2.f;
             QVector3D modelSize   = maxCorner - minCorner;
-            QVector3D eyePoint(modelCenter.x(), modelCenter.y(), maxCorner.z());
+            QVector3D eyePoint(maxCorner.x(), modelCenter.y(), modelCenter.z());
             QVector3D targetPoint = modelCenter;
 
             if (modelSize.x() == 0.f)

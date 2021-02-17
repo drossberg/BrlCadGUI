@@ -45,6 +45,10 @@ private:
 
 private slots:
     void OpenDatabase(void);
+    void FitToWindow(void);
+    void SetToXYPlane(void);
+    void SetToXZPlane(void);
+    void SetToYZPlane(void);
     void SelectObjects(void);
 };
 

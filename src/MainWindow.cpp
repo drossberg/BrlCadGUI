@@ -123,6 +123,24 @@ MainWindow::MainWindow
     m_database() {
     setWindowTitle(tr("BRL-CAD GUI"));
 
+    // the display
+    m_display = new DisplayManager(this);
+    m_display->SetModel(&m_model);
+    setCentralWidget(m_display);
+
+    // objects' tree
+    QDockWidget* objectsDock = new QDockWidget(tr("Database object tree"));
+    m_objectsTree = new QTreeWidget();
+    m_objectsTree->setRootIsDecorated(true);
+    m_objectsTree->setColumnCount(1);
+    m_objectsTree->header()->hide();
+    connect(m_objectsTree, &QTreeWidget::itemSelectionChanged,
+            this,          &MainWindow::SelectObjects);
+
+    objectsDock->setWidget(m_objectsTree);
+    addDockWidget(Qt::LeftDockWidgetArea, objectsDock);
+
+    // file menu
     QAction* dbOpenAction = new QAction(tr("Open database"));
     dbOpenAction->setShortcuts(QKeySequence::Open);
     dbOpenAction->setToolTip(tr("Open an existing .g database file"));
@@ -140,22 +158,32 @@ MainWindow::MainWindow
     fileMenu->addSeparator();
     fileMenu->addAction(exitAction);
 
-    // the display
-    m_display = new DisplayManager(this);
-    m_display->SetModel(&m_model);
-    setCentralWidget(m_display);
+    // view menu
+    QAction* fitToWindowAction = new QAction(tr("Fit to window"));
+    fitToWindowAction->setToolTip(tr("Zooms to an optimal size"));
+    connect(fitToWindowAction, &QAction::triggered,
+            this,              &MainWindow::FitToWindow);
 
-    // objects' tree
-    QDockWidget* objectsDock = new QDockWidget(tr("Database object tree"));
-    m_objectsTree = new QTreeWidget();
-    m_objectsTree->setRootIsDecorated(true);
-    m_objectsTree->setColumnCount(1);
-    m_objectsTree->header()->hide();
-    connect(m_objectsTree, &QTreeWidget::itemSelectionChanged,
-            this,          &MainWindow::SelectObjects);
+    QAction* setToXYPlaneAction = new QAction(tr("x-y plane"));
+    setToXYPlaneAction->setToolTip(tr("View from the top"));
+    connect(setToXYPlaneAction, &QAction::triggered,
+            this,               &MainWindow::SetToXYPlane);
 
-    objectsDock->setWidget(m_objectsTree);
-    addDockWidget(Qt::LeftDockWidgetArea, objectsDock);
+    QAction* setToXZPlaneAction = new QAction(tr("x-z plane"));
+    setToXZPlaneAction->setToolTip(tr("View from the side"));
+    connect(setToXZPlaneAction, &QAction::triggered,
+            this,               &MainWindow::SetToXZPlane);
+
+    QAction* setToYZPlaneAction = new QAction(tr("y-z plane"));
+    setToYZPlaneAction->setToolTip(tr("View from the front"));
+    connect(setToYZPlaneAction, &QAction::triggered,
+            this,               &MainWindow::SetToYZPlane);
+
+    QMenu* viewMenu = menuBar()->addMenu(tr("View"));
+    viewMenu->addAction(fitToWindowAction);
+    viewMenu->addAction(setToXYPlaneAction);
+    viewMenu->addAction(setToXZPlaneAction);
+    viewMenu->addAction(setToYZPlaneAction);
 
     if (fileName != 0)
         LoadDatabase(fileName);
@@ -200,6 +228,30 @@ void MainWindow::OpenDatabase(void) {
                                                     "BRL-CAD database file (*.g)");
 
     LoadDatabase(fileName.toUtf8().data());
+}
+
+
+void MainWindow::FitToWindow(void) {
+    m_display->FitToWindow();
+    m_display->Redraw();
+}
+
+
+void MainWindow::SetToXYPlane(void){
+    m_display->SetToXYPlane();
+    m_display->Redraw();
+}
+
+
+void MainWindow::SetToYZPlane(void){
+    m_display->SetToYZPlane();
+    m_display->Redraw();
+}
+
+
+void MainWindow::SetToXZPlane(void){
+    m_display->SetToXZPlane();
+    m_display->Redraw();
 }
 
 

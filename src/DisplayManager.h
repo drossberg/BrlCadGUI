@@ -43,8 +43,8 @@ public:
     // set projection
     void FitToWindow(void);
     void SetToXYPlane(void);
-    void SetToYZPlane(void);
     void SetToXZPlane(void);
+    void SetToYZPlane(void);
 
     void Zoom(const QPoint& corner,
               const QPoint& diagonalCorner);
